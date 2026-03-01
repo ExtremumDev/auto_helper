@@ -2,8 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    API_ID: int
-    HASH_ID: int
+    BOT_TOKEN: str
 
     DB_USER: str
     DB_PASSWORD: str
