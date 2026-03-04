@@ -3,9 +3,10 @@ from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.user import User
+from src.aiogram_bot.keyboards.user.tg_auth import authorization_types_markup
+from src.common.database.models.user import User
 from src.aiogram_bot.database.utils import provide_user
-from src.aiogram_bot.services.data.context import ServiceContext
+from src.aiogram_bot.services.context import ServiceContext
 
 
 @provide_user
@@ -30,9 +31,14 @@ async def on_start_cmd(
 Это позволит боту отслеживать сообщения в ваших группах.
 
 Выберите способ авторизации:
-"""
+""",
+            reply_markup=authorization_types_markup
         )
 
+async def cancel_action(c: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+
+    await c.answer("Действие отменено")
 
 
 

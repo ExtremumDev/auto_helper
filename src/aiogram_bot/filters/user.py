@@ -1,8 +1,7 @@
 from aiogram.filters import BaseFilter
 
 from src.aiogram_bot.database.utils import provide_user
-from src.aiogram_bot.services.data.context import ServiceContext
-from src.common.databsae.models.user import User
+from src.common.database.models.user import User
 
 
 class AdminFilter(BaseFilter):

@@ -3,13 +3,14 @@ import functools
 from aiogram.types import TelegramObject
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.common.databsae.core.database import connection
-from src.common.databsae.dao.user import UserDAO
+from src.common.database.core.database import connection
+from src.common.database.dao.user import UserDAO
 
 
-@connection
 def provide_user(func):
-    async def wrapper(db_session: AsyncSession, *args, **kwargs):
+    @connection
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
         if args:
             telegram_obj = args[0]
 
@@ -18,7 +19,13 @@ def provide_user(func):
         else:
             raise ValueError("Provide user database decorator: could be used only for aiogram's handlers")
 
+        db_session = kwargs.get('db_session')
+        if not db_session:
+            for arg in args:
+                if isinstance(arg, AsyncSession):
+                    kwargs["db_session"] = arg
+                    break
         user = await UserDAO.get_obj(session=db_session, telegram_user_id=telegram_obj.from_user.id)
 
-        await func(*args, **kwargs, db_session=db_session, user=user)
+        await func(*args, **kwargs, user=user)
     return wrapper
