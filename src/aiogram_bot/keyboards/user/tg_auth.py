@@ -38,3 +38,9 @@ authorization_types_markup = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="По номеру телефона", callback_data="auth_phone")]
     ]
 )
+
+send_code_again_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="Отправить код повторно", callback_data="send_code_again")]
+    ]
+)

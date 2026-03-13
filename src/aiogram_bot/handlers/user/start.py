@@ -9,7 +9,7 @@ from src.aiogram_bot.database.utils import provide_user
 from src.aiogram_bot.services.context import ServiceContext
 
 
-@provide_user
+@provide_user()
 async def on_start_cmd(
         m: types.Message, state: FSMContext, user: User, db_session: AsyncSession, *args, **kwargs
 ):

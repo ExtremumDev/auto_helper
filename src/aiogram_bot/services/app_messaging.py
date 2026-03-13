@@ -1,27 +1,129 @@
+import asyncio
+import json
+import uuid
+from typing import Dict, Any
+
+from asyncio.futures import Future
+
 import redis.asyncio as redis
+
+from src.aiogram_bot.services.data.tg_auth import AuthSessionResult
+from src.common.utils.auth import AuthResponseStatus
+from src.pyrogram.logger import get_rcp_logger
 
 
 class PyrogramAppProcedureCall:
-    PHONE_AUTH_REQ_STREAM = "phone_auth_requests"
-    PHONE_AUTH_RES_STREAM = "phone_auth_responses"
+    PHONE_AUTH_REQ_STREAM = "phone_auth.requests"
+    PHONE_AUTH_RES_STREAM = "phone_auth.responses"
 
 
-    def __init__(self, redis_client: redis.Redis):
-        self.redis_client = redis_client
+    def __init__(self, redis_client: redis.Redis = None):
+        self.redis_client = redis.Redis(decode_responses=True)
+
+        self.pending: Dict[str, Future] = {}
 
 
-    async def create_authorize_task(self, phone_number: str):
-        await self.__add_task(
+    async def create_authorize_task(self, phone_number: str) -> AuthSessionResult:
+        result = await self.__add_task(
             self.PHONE_AUTH_REQ_STREAM,
+            task_type="set_phone",
+            data={
+                "phone": phone_number,
+            }
+        )
+
+        status_id = result.get("status")
+
+
+        if status_id:
+            status = AuthResponseStatus(status_id)
+
+            return AuthSessionResult(status, result.get("tg_account_id"))
+
+        else:
+            return AuthSessionResult(AuthResponseStatus.UNEXPECTED_ERROR)
+
+    async def send_code_to_authorize(self, code: str, tg_account_id: int) -> AuthSessionResult:
+        result = await self.__add_task(
+            channel=self.PHONE_AUTH_REQ_STREAM,
+            task_type="set_code",
+            data={
+                "code": code,
+                "tg_account_id": tg_account_id
+            }
+        )
+
+        status_id = result.get("status")
+
+        if status_id:
+            status = AuthResponseStatus(status_id)
+
+            return AuthSessionResult(status)
+        else:
+            get_rcp_logger().error(
+                "Pyrogram's RCP didn't send auth response status on sending code stage"
+            )
+            return AuthSessionResult(AuthResponseStatus.UNEXPECTED_ERROR)
+
+
+    async def send_password_to_authorize(self, password: str, tg_account_id: int):
+        result = await self.__add_task(
+            channel=self.PHONE_AUTH_REQ_STREAM,
+            task_type="set_password",
+            data={
+                "password": password,
+                "tg_account_id": tg_account_id
+            }
+        )
+
+        status_id = result.get("status")
+
+        if status_id:
+            status = AuthResponseStatus(status_id)
+
+            return AuthSessionResult(status)
+        else:
+            get_rcp_logger().error(
+                "Pyrogram's RCP didn't send auth response status on sending password stage"
+            )
+            return AuthSessionResult(AuthResponseStatus.UNEXPECTED_ERROR)
+
+
+
+    async def __add_task(self, channel: str, task_type: str, data: dict[str, Any]):
+        request_id = str(uuid.uuid4())
+        future = asyncio.get_event_loop().create_future()
+        self.pending[request_id] = future
+
+
+        await self.redis_client.xadd(
+            channel,
             {
-                    "type": "send_code",
-                    "phone": phone_number,
+                "request_id": request_id,
+                "type": task_type,
+                "payload": json.dumps(data)
             }
         )
 
 
-    async def __add_task(self, channel: str, payload):
-        await self.redis_client.xadd(
-            channel,
-            payload
-        )
+        return await asyncio.wait_for(future, None)
+
+    async def response_loop(self):
+        last_id = "$"
+        while True:
+            messages = await self.redis_client.xread(
+                {self.PHONE_AUTH_RES_STREAM: last_id},
+                count=1,
+                block=0
+            )
+
+            for stream, msgs in messages:
+                for msg_id, data in msgs:
+                    request_id = data["request_id"]
+                    print(request_id, data["payload"])
+
+                    if request_id in self.pending:
+                        future = self.pending.pop(request_id)
+                        future.set_result(json.loads(data["payload"]))
+
+                    last_id = msg_id

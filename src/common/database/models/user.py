@@ -24,15 +24,30 @@ class User(Base):
     is_subscribed: Mapped[bool] = mapped_column(default=False)
     expiration_date: Mapped[datetime.datetime] = mapped_column(default=None, nullable=True)
 
-    # telegram_account: Mapped["TelegramAccount"] = relationship(
-    #     "TelegramAccount",
-    # )
+    telegram_account_id: Mapped[int] = mapped_column(
+        ForeignKey("telegram_accounts.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    telegram_account: Mapped["TelegramAccount"] = relationship(
+        "TelegramAccount",
+        back_populates="user"
+    )
 
 
 
 class TelegramAccount(Base):
 
-    status: Mapped[TelegramAccountStatus] = mapped_column(String(10))
+    status: Mapped[TelegramAccountStatus] = mapped_column(Enum(TelegramAccountStatus), default=TelegramAccountStatus.AUTH_NEEDED)
 
     phone_number: Mapped[str] = mapped_column(String(20))
+    telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
 
+    code_hash: Mapped[str] = mapped_column(String(22), nullable=True)
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="telegram_account"
+    )
+
+    @property
+    def client_id(self):
+        return f"account-{self.id}"

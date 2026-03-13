@@ -2,11 +2,13 @@ import asyncio
 import sys
 from pathlib import Path
 
+
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from src.aiogram_bot.bot import dp, bot
 from src.aiogram_bot.handlers import register_all_handlers
 from src.aiogram_bot.services.context import ServiceContext
+from src.aiogram_bot.logger import setup_logger
 
 
 async def on_shutdown():
@@ -14,7 +16,10 @@ async def on_shutdown():
 
 
 async def main():
+    setup_logger()
     ServiceContext.create_defaults()
+
+    asyncio.create_task(ServiceContext.get_app_messaging_service().response_loop())
     register_all_handlers(dp)
 
     dp.shutdown.register(on_shutdown)
