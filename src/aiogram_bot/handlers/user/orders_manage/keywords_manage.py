@@ -42,7 +42,7 @@ async def ask_keywords(c: types.CallbackQuery, state: FSMContext):
     await c.answer()
 
 
-@provide_user
+@provide_user()
 async def handle_new_keywords(
         m: types.Message, state: FSMContext, db_session: AsyncSession, user: User, *args
 ):

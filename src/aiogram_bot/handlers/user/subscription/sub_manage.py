@@ -26,7 +26,7 @@ async def send_tariffs(c: types.CallbackQuery):
     await c.answer()
 
 
-@provide_user
+@provide_user()
 async def send_bill(c: types.CallbackQuery):
     tariff_id = c.data.split('_')[1]
 

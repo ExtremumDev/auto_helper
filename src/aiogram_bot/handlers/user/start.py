@@ -65,3 +65,4 @@ async def go_to_menu(m: types.Message, state: FSMContext):
 def register_start_handlers(dp: Dispatcher):
     dp.message.register(on_start_cmd, CommandStart(), StateFilter('*'))
     dp.message.register(go_to_menu, F.text == "⬅️ Назад")
+    dp.callback_query.register()

@@ -148,7 +148,8 @@ async def change_tariff(state_data: dict, db_session: AsyncSession, days: int = 
             days=days,
             tariff=SubscribeTariffEnum(state_data["tariff"]),
             user=user,
-            expire_date=date
+            expire_date=date,
+            db_session=db_session
         )
 
         return True
