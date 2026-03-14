@@ -23,3 +23,4 @@ class GroupAddResponseStatus(StrEnum):
     INVALID_CHAT = "invalid"
     SUCCESS = "success"
     UNEXPECTED = "unexpected"
+    ACCOUNT_INVALID = "account"

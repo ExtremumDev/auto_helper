@@ -38,29 +38,30 @@ class PyrogramAppProcedureCall(BaseSingleton):
         except redis.ResponseError as e:
             pass
 
-        await asyncio.gather(
+        asyncio.create_task(
             self.worker(
                 stream=self.PHONE_AUTH_REQ_STREAM,
                 response_stream=self.PHONE_AUTH_RES_STREAM,
                 group_name="phone_auth_workers",
-                consumer_name="worker-1"
+                consumer_name="worker-1",
+                id="0"
             )
         )
-
-        await asyncio.gather(
+        asyncio.create_task(
             self.worker(
                 stream=self.GROUP_MANAGE_REQ_STREAM,
                 response_stream=self.GROUP_MANAGE_RES_STREAM,
                 group_name="group_workers",
-                consumer_name="group-1"
+                consumer_name="group-1",
+                id="1"
             )
         )
 
     async def worker(
-            self, stream: str, response_stream: str, group_name: str, consumer_name: str
+            self, stream: str, response_stream: str, group_name: str, consumer_name: str, id: str
     ):
         try:
-            await self.redis_client.xgroup_create(stream, group_name, id="0", mkstream=True)
+            await self.redis_client.xgroup_create(stream, group_name, id=id, mkstream=True)
         except:
             pass
 

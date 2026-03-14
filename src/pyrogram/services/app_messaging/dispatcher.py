@@ -79,8 +79,8 @@ class TaskDispatcher(BaseSingleton):
                     }
         elif channel_name == "group.requests":
             if task_type == "check_group":
-                tg_account_id = data.get("tg_account_id")
-                chat_id = data.get("chat_id")
+                tg_account_id = payload.get("tg_account_id")
+                chat_id = payload.get("chat_id")
 
                 if tg_account_id and chat_id:
                     res = await AccountManager.get_instance().check_group(tg_account_id=tg_account_id, chat_id=chat_id)

@@ -29,7 +29,7 @@ async def main():
     setup_logger()
     create_service_instances()
 
-    asyncio.create_task(PyrogramAppProcedureCall().get_instance().response_loop())
+    await PyrogramAppProcedureCall.get_instance().create_response_loops()
     register_all_handlers(dp)
 
     dp.shutdown.register(on_shutdown)

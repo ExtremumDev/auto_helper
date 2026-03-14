@@ -21,10 +21,10 @@ async def main():
     setup_logger()
 
     create_services()
-
     await AccountManager.get_instance().start_all_clients()
 
     await PyrogramAppProcedureCall.get_instance().run_default_workers()
+
 
 
 if __name__ == "__main__":

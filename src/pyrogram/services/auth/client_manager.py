@@ -29,6 +29,7 @@ import logging
 from enum import Enum, StrEnum
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.util import await_only
 
 from src.common.database.core.database import connection
 from src.common.database.models.enums import TelegramAccountStatus
@@ -241,15 +242,15 @@ class AccountManager(BaseSingleton):
         tg_account.status = TelegramAccountStatus.ACTIVE
         # handlers
 
-        client_id = tg_account.client_id
-        self.accounts_handling_chats[client_id] = [g.id for g in tg_account.user.handling_groups]
-
-        client.add_handler(
-            MessageHandler(
-                handle_post_in_group,
-                filters.chat(self.accounts_handling_chats[client_id])
-            )
-        )
+        # client_id = tg_account.client_id
+        # self.accounts_handling_chats[client_id] = [g.id for g in tg_account.user.handling_groups]
+        #
+        # client.add_handler(
+        #     MessageHandler(
+        #         handle_post_in_group,
+        #         filters.chat(self.accounts_handling_chats[client_id])
+        #     )
+        # )
 
 
 
@@ -282,11 +283,11 @@ class AccountManager(BaseSingleton):
                 "Invalid API ID in config"
             )
             return False
-        except Exception as e:
+        except ConnectionError as e:
             get_pg_client_logger().info(
-                str(e) + "\n" + str(e.args)
+                str(type(e))+ str(e) + "\n" + str(e.args)
             )
-            return False
+            return True
 
     @connection
     async def start_all_clients(self, db_session: AsyncSession, *args):
@@ -336,21 +337,27 @@ class AccountManager(BaseSingleton):
 
         client = self.clients[tg_account.client_id]
 
-        try:
-            chat = await client.get_chat(chat_id)
+        if await self.check_client_availability(client=client):
 
-            if chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
-                self.accounts_handling_chats[client.name].append(chat_id)
+            try:
+                chat = await client.get_chat(chat_id)
 
-                group_obj: Group = await GroupDAO.add(session=db_session, chat_id=chat_id, display_name=chat.first_name)
-                group_obj.user = tg_account.user
-                await db_session.commit()
-                return GroupAddResponseStatus.SUCCESS
-            else:
-                return GroupAddResponseStatus.INVALID_CHAT_TYPE
+                if chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
+                    self.accounts_handling_chats[client.name].append(chat_id)
 
-        except ValueError:
-            return GroupAddResponseStatus.INVALID_CHAT
+                    group_obj: Group = await GroupDAO.add(session=db_session, chat_id=chat_id, display_name=chat.first_name)
+                    group_obj.user = tg_account.user
+                    await db_session.commit()
+                    return GroupAddResponseStatus.SUCCESS
+                else:
+                    return GroupAddResponseStatus.INVALID_CHAT_TYPE
+
+            except ValueError:
+                return GroupAddResponseStatus.INVALID_CHAT
+        else:
+            tg_account.status = TelegramAccountStatus.AUTH_NEEDED
+            await db_session.commit()
+            return GroupAddResponseStatus.ACCOUNT_INVALID
 
     @connection
     async def remove_group(self, group_id: int, tg_account_id: int):

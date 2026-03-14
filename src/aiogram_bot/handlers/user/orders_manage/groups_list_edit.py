@@ -83,6 +83,8 @@ async def handle_group(m: types.Message, state: FSMContext, user: User, *args, *
                 text = "Чат должен являться группой(а не каналом или ЛС)"
             case GroupAddResponseStatus.UNEXPECTED:
                 text = "❌ Не удалось добавить этот чат, попробуйте позже"
+            case GroupAddResponseStatus.ACCOUNT_INVALID:
+                text = "❌ Ошибка: Аккаунт не авторизован, перейдите в раздел управления аккаунтом"
         await m.answer(
             text=text,
             reply_markup=main_user_reply_markup

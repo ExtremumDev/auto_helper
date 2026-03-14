@@ -26,6 +26,10 @@ class PyrogramAppProcedureCall(BaseSingleton):
         self.pending: Dict[str, Future] = {}
 
 
+    async def create_response_loops(self):
+        asyncio.create_task(self.response_loop(self.PHONE_AUTH_RES_STREAM))
+        asyncio.create_task(self.response_loop(self.GROUP_MANAGE_RES_STREAM))
+
     async def create_authorize_task(self, phone_number: str) -> AuthSessionResult:
         result = await self.__add_task(
             self.PHONE_AUTH_REQ_STREAM,
@@ -130,11 +134,11 @@ class PyrogramAppProcedureCall(BaseSingleton):
 
         return await asyncio.wait_for(future, None)
 
-    async def response_loop(self):
+    async def response_loop(self, channel: str):
         last_id = "$"
         while True:
             messages = await self.redis_client.xread(
-                {self.PHONE_AUTH_RES_STREAM: last_id},
+                {channel: last_id},
                 count=1,
                 block=0
             )
