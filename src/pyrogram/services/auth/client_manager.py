@@ -230,6 +230,7 @@ class AccountManager(BaseSingleton):
                     client=client,
                     tg_account=tg_account,
                 )
+                await db_session.commit()
 
                 return AuthResponse(AuthResponseStatus.SUCCESS)
             except (PasswordHashInvalid, PasswordEmpty, PasswordRecoveryNa):
