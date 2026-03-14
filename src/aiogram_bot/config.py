@@ -14,3 +14,6 @@ settings = Settings()
 
 ADMINS = {1005462960}
 MAIN_ADMINS = {}
+
+
+MAX_GROUPS = 7

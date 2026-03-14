@@ -8,7 +8,7 @@ from src.common.database.models.enums import SubscribeTariffEnum
 from src.common.database.models.user import User
 
 
-@provide_user
+@provide_user()
 async def send_account_info(m: types.Message, db_session: AsyncSession, user: User, *args):
 
     await m.answer(

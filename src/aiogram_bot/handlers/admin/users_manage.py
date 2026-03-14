@@ -21,7 +21,8 @@ from src.common.database.models.enums import SubscribeTariffEnum
 @connection
 async def send_users_list(c: types.CallbackQuery, db_session: AsyncSession, *args):
     paging = UsersPaging()
-    await paging.get_current_page(db_session=db_session)
+    await paging.get_queryset(db_session=db_session)
+    await paging.get_current_page()
 
     await c.message.answer(
         text="Выберите пользователя",

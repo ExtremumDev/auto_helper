@@ -7,7 +7,7 @@ from src.common.database.core.database import connection
 from src.common.database.dao.user import UserDAO
 
 
-def provide_user(load_tg_account: bool = False):
+def provide_user(load_tg_account: bool = False, load_groups: bool = False):
     def decorator(func):
         @connection
         @functools.wraps(func)
@@ -29,7 +29,8 @@ def provide_user(load_tg_account: bool = False):
             user = await UserDAO.get_obj(
                 session=db_session,
                 load_tg_account=load_tg_account,
-                telegram_user_id=telegram_obj.from_user.id
+                telegram_user_id=telegram_obj.from_user.id,
+                load_handling_groups=load_groups
             )
 
             await func(*args, **kwargs, user=user)

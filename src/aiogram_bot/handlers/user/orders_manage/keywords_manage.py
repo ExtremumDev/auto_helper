@@ -13,7 +13,7 @@ from src.aiogram_bot.utils.text import get_orders_settings_descr
 from src.common.database.models.user import User
 
 
-@provide_user
+@provide_user()
 async def send_info(m: types.Message, db_session: AsyncSession, user: User, *args):
 
     await m.answer(
@@ -67,7 +67,7 @@ async def handle_new_keywords(
 
 
 def register_keywords_manage_handlers(dp: Dispatcher):
-    dp.message.register(send_info, F.text == "Настройка фильтрации заказов")
+    dp.message.register(send_info, F.text == "🔍 Настройка фильтрации заказов")
 
     dp.callback_query.register(ask_keywords, F.data.startswith("editw_"))
     dp.message.register(handle_new_keywords, StateFilter(KeywordsInputFSM.words_state))

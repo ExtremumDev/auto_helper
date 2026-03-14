@@ -77,8 +77,7 @@ class Paging:
             )
         return reply_markup
 
-    async def get_current_page(self, db_session: AsyncSession, *args):
-        await self.get_queryset(db_session=db_session)
+    async def get_current_page(self, *args):
         if self.queryset:
             if self.page > 0:
                 self.is_prev = True
@@ -90,8 +89,7 @@ class Paging:
             else:
                 self.queryset = []
 
-    async def create_next_page(self, db_session: AsyncSession, *args):
-        await self.get_queryset(db_session=db_session)
+    async def create_next_page(self, *args):
         if self.queryset:
             self.is_prev = True
             self.page += 1
@@ -105,8 +103,7 @@ class Paging:
             else:
                 self.queryset = []
 
-    async def create_prev_page(self, db_session: AsyncSession, *args):
-        await self.get_queryset(db_session=db_session)
+    async def create_prev_page(self, *args):
         if self.queryset:
             self.page -= 1
             if self.page > 0:
@@ -131,8 +128,8 @@ class Paging:
         page = int(c_data[1])
 
         paging = cls(page)
-        await paging.get_queryset(db_session=db_session)
-        await paging.create_next_page()
+        await paging.get_queryset()
+        await paging.create_next_page(db_session=db_session)
 
         await c.message.edit_reply_markup(
             reply_markup=paging.get_reply_markup()

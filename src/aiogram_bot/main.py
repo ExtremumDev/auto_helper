@@ -27,6 +27,7 @@ def create_service_instances():
 
 async def main():
     setup_logger()
+    create_service_instances()
 
     asyncio.create_task(PyrogramAppProcedureCall().get_instance().response_loop())
     register_all_handlers(dp)

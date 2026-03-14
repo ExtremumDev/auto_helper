@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Callable, Any
 from datetime import datetime, timedelta
 from pyrogram import Client
+from pyrogram.enums import ChatType
 from pyrogram.errors import (
     PhoneNumberInvalid,
     PhoneCodeInvalid,
@@ -181,7 +182,6 @@ class AccountManager(BaseSingleton):
                 await self.setup_account(
                     client=client,
                     tg_account=tg_account,
-                    db_session=db_session
                 )
 
                 return AuthResponse(AuthResponseStatus.SUCCESS)
@@ -229,7 +229,6 @@ class AccountManager(BaseSingleton):
                 await self.setup_account(
                     client=client,
                     tg_account=tg_account,
-                    db_session=db_session
                 )
 
                 return AuthResponse(AuthResponseStatus.SUCCESS)
@@ -239,11 +238,13 @@ class AccountManager(BaseSingleton):
             return AuthResponse(AuthResponseStatus.UNEXPECTED_ERROR)
 
 
-    async def setup_account(self, client, tg_account: TelegramAccount, db_session: AsyncSession):
+    async def setup_account(self, client: Client, tg_account: TelegramAccount):
         tg_account.status = TelegramAccountStatus.ACTIVE
         # handlers
 
-        await db_session.commit()
+        # for g in tg_account.user.handling_groups:
+        #     pass
+
 
 
     async def stop_client(self, client):
@@ -280,6 +281,64 @@ class AccountManager(BaseSingleton):
                 str(e) + "\n" + str(e.args)
             )
             return False
+
+    @connection
+    async def start_all_clients(self, db_session: AsyncSession, *args):
+        accounts = await TelegramAccountDAO.get_active_accounts(db_session=db_session)
+
+        for acc in accounts:
+            await self.start_client(account=acc)
+
+        await db_session.commit()
+
+
+    async def start_client(self, account: TelegramAccount):
+        client_id = account.client_id
+
+        client = Client(
+            name=client_id,
+            api_id=settings.API_ID,
+            api_hash=settings.API_HASH
+        )
+
+        self.clients[client_id] = client
+
+        if not client.is_connected:
+            try:
+                await client.connect()
+
+                try:
+                    me = await client.get_me()
+
+                    await self.setup_account(client=client, tg_account=account)
+                except (AuthKeyInvalid, SessionRevoked):
+                    account.status = TelegramAccountStatus.AUTH_NEEDED
+                    await client.disconnect()
+                    return False
+
+
+            except Exception as e:
+                get_pg_client_logger().error(
+                    f"Unexpected error while starting an account, account id = {account.id}. Error: {str(e)}"
+                )
+        else:
+            return True
+
+    @connection
+    async def check_group(self, tg_account_id: int, chat_id: int, db_session: AsyncSession):
+        tg_account = await TelegramAccountDAO.get_obj(session=db_session, id=tg_account_id)
+
+        client = self.clients[tg_account.client_id]
+
+        try:
+            chat = await client.get_chat(chat_id)
+
+            if chat.type in [ChatType.GROUP, ChatType.SUPERGROUP]:
+                pass
+
+        except ValueError:
+            return
+
 
 
     async def stop_account(self, name: str):

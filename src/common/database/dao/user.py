@@ -2,22 +2,28 @@ from typing import Iterable
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from src.common.database.dao.base import BaseDAO
-from src.common.database.models.user import User, TelegramAccount
+from src.common.database.models.user import User, TelegramAccount, Group
 
 
 class UserDAO(BaseDAO):
     model = User
 
     @classmethod
-    async def get_obj(cls, session: AsyncSession, load_tg_account: bool=False, **values):
+    async def get_obj(
+            cls, session: AsyncSession, load_tg_account: bool=False, load_handling_groups: bool = False, **values
+    ):
         query = select(cls.model).filter_by(**values)
 
         if load_tg_account:
             query = query.options(
                 joinedload(User.telegram_account)
+            )
+        if load_handling_groups:
+            query = query.options(
+                selectinload(User.handling_groups)
             )
 
         result = await session.execute(query)
@@ -51,3 +57,7 @@ class TelegramAccountDAO(BaseDAO):
         res = await db_session.execute(query)
 
         return res.scalar_one_or_none()
+
+
+class GroupDAO(BaseDAO):
+    model = Group

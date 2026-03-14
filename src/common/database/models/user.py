@@ -1,6 +1,7 @@
 import datetime
+from typing import List
 
-from sqlalchemy import Integer, BigInteger, String, ForeignKey, Enum, Boolean
+from sqlalchemy import Integer, BigInteger, String, ForeignKey, Enum, Boolean, Table, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -34,9 +35,27 @@ class User(Base):
         back_populates="user"
     )
 
+    handling_groups: Mapped[List["Group"]] = relationship(
+        "Group",
+        back_populates="user",
+        uselist=True,
+        cascade="all, delete-orphan"
+    )
+
     @property
     def register_date(self):
         return self.created_at.strftime("%d.%m.%Y")
+
+
+class Group(Base):
+
+    display_name: Mapped[str] = mapped_column(String(50))
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="handling_groups"
+    )
 
 
 

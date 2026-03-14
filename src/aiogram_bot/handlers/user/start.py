@@ -1,4 +1,4 @@
-from aiogram import Dispatcher, types
+from aiogram import Dispatcher, types, F
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,6 +52,16 @@ async def cancel_action(c: types.CallbackQuery, state: FSMContext):
     await c.answer("Действие отменено")
 
 
+async def go_to_menu(m: types.Message, state: FSMContext):
+    await state.clear()
+
+    await m.answer(
+        "Действие отменено",
+        reply_markup=main_user_reply_markup
+    )
+
+
 
 def register_start_handlers(dp: Dispatcher):
     dp.message.register(on_start_cmd, CommandStart(), StateFilter('*'))
+    dp.message.register(go_to_menu, F.text == "⬅️ Назад")

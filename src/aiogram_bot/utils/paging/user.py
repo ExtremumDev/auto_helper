@@ -1,6 +1,5 @@
-from aiogram import types
-from aiogram.types import InlineKeyboardButton
-from pyrogram.types import InlineKeyboardMarkup
+
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.aiogram_bot.utils.paging.base import Paging
