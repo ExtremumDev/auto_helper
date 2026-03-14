@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Integer, BigInteger, String, ForeignKey, Enum
+from sqlalchemy import Integer, BigInteger, String, ForeignKey, Enum, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -10,6 +10,7 @@ from .enums import TelegramAccountStatus, SubscribeTariffEnum
 class User(Base):
 
     telegram_user_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    telegram_username: Mapped[str] = mapped_column(String(32), nullable=True)
 
     is_admin: Mapped[bool] = mapped_column(default=False)
 
@@ -33,6 +34,10 @@ class User(Base):
         back_populates="user"
     )
 
+    @property
+    def register_date(self):
+        return self.created_at.strftime("%d.%m.%Y")
+
 
 
 class TelegramAccount(Base):
@@ -41,6 +46,8 @@ class TelegramAccount(Base):
 
     phone_number: Mapped[str] = mapped_column(String(20))
     telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+
+    is_message_handling: Mapped[bool] = mapped_column(Boolean, default=True)
 
     code_hash: Mapped[str] = mapped_column(String(22), nullable=True)
     user: Mapped["User"] = relationship(

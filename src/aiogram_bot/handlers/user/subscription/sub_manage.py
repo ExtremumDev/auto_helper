@@ -35,5 +35,5 @@ async def send_bill(c: types.CallbackQuery):
     await c.answer()
 
 def register_subscription_manage_markup(dp: Dispatcher):
-    dp.message.register(send_account_info, F.text == "Управление подпиской")
+    dp.message.register(send_account_info, F.text == "💵 Управление подпиской")
     dp.callback_query.register(send_tariffs, F.data == "buy_sub")

@@ -3,10 +3,11 @@ from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.aiogram_bot.keyboards.user.main import main_user_reply_markup
 from src.aiogram_bot.keyboards.user.tg_auth import authorization_types_markup
+from src.aiogram_bot.services.data.user import UserService
 from src.common.database.models.user import User
 from src.aiogram_bot.database.utils import provide_user
-from src.aiogram_bot.services.context import ServiceContext
 
 
 @provide_user()
@@ -15,18 +16,28 @@ async def on_start_cmd(
 ):
     if user:
         await m.answer(
-            "Открыто главное меню"
+            "Открыто главное меню",
+            reply_markup=main_user_reply_markup
         )
     else:
-        await ServiceContext.get_user_service().register_user(telegram_user_id=m.from_user.id, db_session=db_session)
+        new_user = await UserService().get_instance().register_user(
+            telegram_user_id=m.from_user.id,
+            db_session=db_session,
+            telegram_username=m.from_user.username
+        )
 
         await m.answer(
             f"""
 👋 Добро пожаловать, {m.from_user.first_name}!
 
-🎁 Вам предоставлен тестовый период — 1 день!
-📅 Действует до: 22.02.2026 10:49
+🎁 Вам предоставлен тестовый период — 10 дней!
+📅 Действует до: {new_user.expiration_date.strftime('%d-%m-%y %H:%M')}
+""",
+            reply_markup=main_user_reply_markup
+        )
 
+        await m.answer(
+            text="""
 Для начала работы нужно авторизовать ваш Telegram аккаунт.
 Это позволит боту отслеживать сообщения в ваших группах.
 

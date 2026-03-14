@@ -3,17 +3,19 @@ import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.aiogram_bot.services.singleton import BaseSingleton
 from src.aiogram_bot.utils.exceptions import ValidationError
 from src.common.database.dao.user import UserDAO
 from src.common.database.models.enums import SubscribeTariffEnum
 from src.common.database.models.user import User
 
 
-class UserService:
+class UserService(BaseSingleton):
 
-    async def subscribe(self, days: int, tariff: SubscribeTariffEnum, user: User, db_session: AsyncSession):
-        today = datetime.datetime.now()
-        expire_date = today + datetime.timedelta(days=days)
+    async def subscribe(self, days: int, tariff: SubscribeTariffEnum, user: User, db_session: AsyncSession, expire_date: datetime.datetime = None):
+        if not expire_date:
+            today = datetime.datetime.now()
+            expire_date = today + datetime.timedelta(days=days)
 
         user.expiration_date = expire_date
         user.sub_tariff = tariff
@@ -21,16 +23,29 @@ class UserService:
 
         await db_session.commit()
 
-    async def register_user(self, telegram_user_id: int, db_session: AsyncSession):
+    async def register_user(
+            self, telegram_user_id: int, telegram_username: str | None, db_session: AsyncSession, is_admin = False
+    ) -> User:
+        """
+
+        :param telegram_user_id:
+        :param telegram_username:
+        :param db_session:
+        :param is_admin:
+        :return: New user object
+        """
         user = await UserDAO.add(
             session=db_session,
             telegram_user_id=telegram_user_id,
-            is_admin=False
+            is_admin=is_admin,
+            telegram_username=telegram_username,
         )
 
         # free 10 days full sub
 
         await self.subscribe(days=10, tariff=SubscribeTariffEnum.HARD, user=user, db_session=db_session)
+
+        return user
 
 
     async def update_keywords(self, keywords: str, db_session: AsyncSession, user: User, editing: str):

@@ -33,9 +33,48 @@ def get_input_code_markup(cur_code: str = ""):
         inline_keyboard=markup
     )
 
+def get_telegram_account_markup(is_authorized: bool, is_message_handling: bool = None):
+    markup = InlineKeyboardMarkup(
+        inline_keyboard=[
+
+        ]
+    )
+
+    if is_authorized:
+        markup.inline_keyboard.extend(
+            [
+                [
+                    InlineKeyboardButton(text="⏸ Остановить мониторинг заказов", callback_data="turn_off_orders")
+                    if is_message_handling
+                    else InlineKeyboardButton(text="▶️ Включить мониторинг заказов", callback_data="turn_on_orders")
+                ]
+            ],
+        )
+    else:
+        markup.inline_keyboard.extend(
+            [
+                [
+                    InlineKeyboardButton(text="Авторизоваться", callback_data="complete_acc_auth")
+                ]
+            ]
+        )
+    markup.inline_keyboard.extend(
+        [
+            [InlineKeyboardButton(text="❌ Отключить аккаунт", callback_data="turn_off_account")]
+        ]
+    )
+
+    return markup
+
 authorization_types_markup = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="По номеру телефона", callback_data="auth_phone")]
+    ]
+)
+
+authorize_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="🔑 Авторизоваться", callback_data="authorize")]
     ]
 )
 

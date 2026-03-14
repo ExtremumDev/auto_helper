@@ -7,7 +7,7 @@ from src.aiogram_bot.database.utils import provide_user
 from src.aiogram_bot.fsm.user.orders_manage import KeywordsInputFSM
 from src.aiogram_bot.keyboards.user.main import cancel_inline_markup
 from src.aiogram_bot.keyboards.user.orders_manage import get_main_order_manage_markup
-from src.aiogram_bot.services.context import ServiceContext
+from src.aiogram_bot.services.data.user import UserService
 from src.aiogram_bot.utils.exceptions import ValidationError
 from src.aiogram_bot.utils.text import get_orders_settings_descr
 from src.common.database.models.user import User
@@ -53,7 +53,7 @@ async def handle_new_keywords(
     edit = s_data["edit"]
 
     try:
-        await ServiceContext.get_user_service().update_keywords(data, user=user, db_session=db_session, editing=edit)
+        await UserService.get_instance().update_keywords(data, user=user, db_session=db_session, editing=edit)
 
         await m.answer(
             "Список успешно обновлён!"

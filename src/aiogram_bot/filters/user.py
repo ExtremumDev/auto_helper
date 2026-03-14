@@ -1,14 +1,9 @@
 from aiogram.filters import BaseFilter
 
-from src.aiogram_bot.database.utils import provide_user
-from src.common.database.models.user import User
+from src.aiogram_bot.config import ADMINS
 
 
 class AdminFilter(BaseFilter):
 
-    @provide_user
-    async def __call__(self, user: User, *args, **kwargs):
-        if user:
-            return user.is_admin
-        else:
-            return False
+    async def __call__(self, telegram_obj, *args, **kwargs):
+        return telegram_obj.from_user.id in ADMINS

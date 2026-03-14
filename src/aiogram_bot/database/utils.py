@@ -12,7 +12,6 @@ def provide_user(load_tg_account: bool = False):
         @connection
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
-            print("123")
             if args:
                 telegram_obj = args[0]
 
@@ -33,8 +32,6 @@ def provide_user(load_tg_account: bool = False):
                 telegram_user_id=telegram_obj.from_user.id
             )
 
-            print("456")
             await func(*args, **kwargs, user=user)
-            print("789")
         return wrapper
     return decorator

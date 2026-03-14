@@ -11,3 +11,6 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+
+ADMINS = {1005462960}
+MAIN_ADMINS = {}

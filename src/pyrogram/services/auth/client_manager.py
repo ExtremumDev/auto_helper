@@ -132,6 +132,8 @@ class AccountManager(BaseSingleton):
                 self.clients[client_id] = client
 
             if await self.check_client_availability(client):
+                account.status = TelegramAccountStatus.ACTIVE
+                await db_session.commit()
                 return AuthResponse(AuthResponseStatus.PHONE_ALREADY_AUTH, account.id)
             else:
                 try:
@@ -176,6 +178,12 @@ class AccountManager(BaseSingleton):
                     phone_code=code
                 )
 
+                await self.setup_account(
+                    client=client,
+                    tg_account=tg_account,
+                    db_session=db_session
+                )
+
                 return AuthResponse(AuthResponseStatus.SUCCESS)
 
             except PhoneCodeInvalid:
@@ -216,6 +224,13 @@ class AccountManager(BaseSingleton):
                 await client.check_password(
                     password=password
                 )
+                me = await client.get_me()
+
+                await self.setup_account(
+                    client=client,
+                    tg_account=tg_account,
+                    db_session=db_session
+                )
 
                 return AuthResponse(AuthResponseStatus.SUCCESS)
             except (PasswordHashInvalid, PasswordEmpty, PasswordRecoveryNa):
@@ -224,8 +239,21 @@ class AccountManager(BaseSingleton):
             return AuthResponse(AuthResponseStatus.UNEXPECTED_ERROR)
 
 
-    async def setup_account(self, client):
-        pass
+    async def setup_account(self, client, tg_account: TelegramAccount, db_session: AsyncSession):
+        tg_account.status = TelegramAccountStatus.ACTIVE
+        # handlers
+
+        await db_session.commit()
+
+
+    async def stop_client(self, client):
+        if client.is_connected:
+            await client.stop()
+
+
+    async def stop_all_accounts(self):
+        for client_id, client in self.clients.items():
+            await self.stop_client(client)
 
     async def check_client_availability(self, client: Client) -> bool:
         """

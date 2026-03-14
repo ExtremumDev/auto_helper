@@ -7,12 +7,13 @@ from asyncio.futures import Future
 
 import redis.asyncio as redis
 
-from src.aiogram_bot.services.data.tg_auth import AuthSessionResult
+from src.aiogram_bot.services.data.utils import AuthSessionResult
+from src.aiogram_bot.services.singleton import BaseSingleton
 from src.common.utils.auth import AuthResponseStatus
 from src.pyrogram.logger import get_rcp_logger
 
 
-class PyrogramAppProcedureCall:
+class PyrogramAppProcedureCall(BaseSingleton):
     PHONE_AUTH_REQ_STREAM = "phone_auth.requests"
     PHONE_AUTH_RES_STREAM = "phone_auth.responses"
 
