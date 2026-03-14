@@ -2,7 +2,7 @@ from typing import Any
 
 import json
 
-from src.common.utils.auth import AuthResponseStatus
+from src.common.utils.auth import AuthResponseStatus, GroupAddResponseStatus
 from src.pyrogram.logger import get_rcp_logger
 from src.pyrogram.services.auth.client_manager import AccountManager
 from src.pyrogram.services.singleton import BaseSingleton
@@ -76,4 +76,18 @@ class TaskDispatcher(BaseSingleton):
                     )
                     return {
                         "status": AuthResponseStatus.UNEXPECTED_ERROR
+                    }
+        elif channel_name == "group.requests":
+            if task_type == "check_group":
+                tg_account_id = data.get("tg_account_id")
+                chat_id = data.get("chat_id")
+
+                if tg_account_id and chat_id:
+                    res = await AccountManager.get_instance().check_group(tg_account_id=tg_account_id, chat_id=chat_id)
+                    return {
+                        "status": res.value
+                    }
+                else:
+                    return {
+                        "status": GroupAddResponseStatus.UNEXPECTED
                     }

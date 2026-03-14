@@ -50,6 +50,7 @@ class User(Base):
 class Group(Base):
 
     display_name: Mapped[str] = mapped_column(String(50))
+    chat_id: Mapped[int] = mapped_column(BigInteger)
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     user: Mapped["User"] = relationship(

@@ -17,4 +17,5 @@ async def handle_post_in_group(client: Client, message: Message, db_session: Asy
     if tg_account:
         if message.text:
             if is_order_suitable_for_user(tg_account.user, message.text):
+                pass
 

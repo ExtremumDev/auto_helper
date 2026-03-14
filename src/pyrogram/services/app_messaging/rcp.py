@@ -11,6 +11,8 @@ from src.pyrogram.services.singleton import BaseSingleton
 class PyrogramAppProcedureCall(BaseSingleton):
     PHONE_AUTH_REQ_STREAM = "phone_auth.requests"
     PHONE_AUTH_RES_STREAM = "phone_auth.responses"
+    GROUP_MANAGE_REQ_STREAM = "group.requests"
+    GROUP_MANAGE_RES_STREAM = "group.responses"
 
     def __init__(self):
         self.redis_client = redis.Redis(decode_responses=True)
@@ -26,12 +28,31 @@ class PyrogramAppProcedureCall(BaseSingleton):
         except redis.ResponseError as e:
             pass
 
+        try:
+            await self.redis_client.xgroup_create(
+                name=self.GROUP_MANAGE_REQ_STREAM,
+                groupname="group_workers",
+                id="1",
+                mkstream=True
+            )
+        except redis.ResponseError as e:
+            pass
+
         await asyncio.gather(
             self.worker(
                 stream=self.PHONE_AUTH_REQ_STREAM,
                 response_stream=self.PHONE_AUTH_RES_STREAM,
                 group_name="phone_auth_workers",
                 consumer_name="worker-1"
+            )
+        )
+
+        await asyncio.gather(
+            self.worker(
+                stream=self.GROUP_MANAGE_REQ_STREAM,
+                response_stream=self.GROUP_MANAGE_RES_STREAM,
+                group_name="group_workers",
+                consumer_name="group-1"
             )
         )
 

@@ -17,3 +17,9 @@ class AuthResponseStatus(StrEnum):
     @classmethod
     def _missing_(cls, value):
         return cls.UNEXPECTED_ERROR
+
+class GroupAddResponseStatus(StrEnum):
+    INVALID_CHAT_TYPE = "type"
+    INVALID_CHAT = "invalid"
+    SUCCESS = "success"
+    UNEXPECTED = "unexpected"
