@@ -1,0 +1,10 @@
+[Unit]
+Description=Auto help pyrogram app
+After=network.target
+
+[Service]
+ExecStart=/root/auto_help/venv/bin/python3 /root/auto_help/src/pyrogram/main.py
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
