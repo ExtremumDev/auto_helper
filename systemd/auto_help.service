@@ -3,6 +3,7 @@ Description=Auto help pyrogram app
 After=network.target
 
 [Service]
+WorkingDirectory=/root/auto_helper/
 ExecStart=/root/auto_helper/venv/bin/python3 /root/auto_helper/src/pyrogram/main.py
 Type=simple
 

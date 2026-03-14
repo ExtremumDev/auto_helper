@@ -3,6 +3,7 @@ Description=Auto help aiogram bot
 After=network.target
 
 [Service]
+WorkingDirectory=/root/auto_helper/
 ExecStart=/root/auto_helper/venv/bin/python3 /root/auto_helper/src/aiogram_bot/main.py
 Type=simple
 
